@@ -33,9 +33,9 @@ def showData(link,mode,className,session):
     top2.title("Info")
     if mode == "my":
         top2.geometry('500x400')
-    top2.configure(background="#12062e")
+    top2.configure(background="#1b1b1c")
 
-    canvas = tk.Canvas(top2, borderwidth=0, highlightthickness=0,background="#12062e")
+    canvas = tk.Canvas(top2, borderwidth=0, highlightthickness=0,background="#1b1b1c")
     canvas.grid(row=0, column=0, sticky='nsew')
     
     xscrollbar = tk.Scrollbar(top2, orient='horizontal', command=canvas.xview)
@@ -53,7 +53,7 @@ def showData(link,mode,className,session):
 
     for i, header in enumerate(headers):
         if i < 3 and mode == "my":continue
-        label = tk.Label(table_frame, text=header, borderwidth=1, relief='solid',highlightbackground='white',background="#12062e",foreground="white",highlightcolor="white",highlightthickness=1,font=("Arial",10,"bold"))
+        label = tk.Label(table_frame, text=header, borderwidth=1, relief='solid',highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"))
         label.grid(row=0, column=i - (3 if mode == "my" else 0), sticky='nsew')
         table_frame.grid_columnconfigure(i - (3 if mode == "my"else 0), weight=1)
 
@@ -62,11 +62,27 @@ def showData(link,mode,className,session):
     for i, row in enumerate(rows):
         for j, value in enumerate(row):
             if j < 3 and mode == "my":continue
-            label = tk.Label(table_frame, text=value, borderwidth=1, relief='solid', highlightbackground='white',background="#12062e",foreground="white",highlightcolor="white",highlightthickness=1,font=("Arial",10,"bold"))
-            if value != '' and value[0] == '+':
+            if mode == "my" and j==5:
+                if(rows[i][j] == "Accepted"): value = "Yes"
+                elif "Running" in value or "queue" in value: value = "NEW"
+                else:
+                    if "Wrong" in value:value = "No - Wrong Answer"
+                    elif "Runtime" in value: value = "No - Runtime error"
+                    elif "Time limit" in value:value = "No - Time limit"
+                    elif "Memory" in value: value = "No - Memory limit"
+                    elif "Idle" in value: value = "No - Idleness limit"
+            value = '\n' + value + '\n'
+            label = tk.Label(table_frame, text=value, borderwidth=1, relief='solid', highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"))
+            if value != '\n\n' and value[1] == '+':
                 label.configure(foreground='#1cfc03')
             if mode == "my" and j==5:
-                label.configure(foreground=("#1cfc03" if value=="Accepted" else "red"))
+                if value == "\nYes\n":
+                    label.configure(foreground=("#1cfc03"))
+                elif "No" in value or "error" in value:
+                    label.configure(foreground=("red"))
+                else:
+                    label.configure(foreground=("#dfdfe6"))
+
             label.grid(row=i+1, column=j - (3 if mode == "my" else 0), sticky='nsew')
             table_frame.grid_rowconfigure(i+1, weight=1)
 
