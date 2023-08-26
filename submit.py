@@ -2,7 +2,7 @@ import datetime
 import submissionListener
 from bs4 import BeautifulSoup
 from tkinter import messagebox
-
+import threading
 def submutSolution(link, session, problem, filepath):
     if not filepath:messagebox.showerror(title="Error",message="Please Choose a File");return
     bol = messagebox.askyesno(title="Confirmation", message="Are you sure that you want to submit this solution?")
@@ -44,12 +44,18 @@ def submutSolution(link, session, problem, filepath):
     # Print the response status code and content
     if response.status_code == 200:
         messagebox.showinfo(title="Success!",message="Submited Successfuly")
-        now = (datetime.datetime.now())
-        h = str(now.hour)
-        m = str(now.minute)
-        if len(h)==1:h = '0' + h
-        if len(m)==1:m = '0' + m
-        submissionListener.dates.append(f"{h}:{m}")
-    
+        while True:
+            try:
+                data = session.get(f"{link}/my")
+                break
+            except:
+                continue
+
+        soup = BeautifulSoup(data.text, 'html.parser')
+        submissions = soup.find('table', {'class': 'status-frame-datatable'})
+
+        subnum = [td.text.strip() for td in submissions.find_all('tr')[1].find_all('td')][0]
+        thread2 = threading.Thread(target = lambda :submissionListener.waitForIt(link,session,subnum))
+        thread2.start()
     else:
         messagebox.showerror(title="Failure!",message="something went wrong, try again.")

@@ -28,11 +28,15 @@ def showData(link,mode,className,session):
     top2 = tk.Toplevel()
     top2.grab_set()
     top2.protocol('WM_DELETE_WINDOW', on_close)
-    top2.resizable(False,False)
+    #top2.resizable(False,False)
     top2.geometry('800x400')
     top2.title("Info")
+    
     if mode == "my":
         top2.geometry('500x400')
+    else:
+        top2.geometry('800x400')  
+        top2.state('zoomed')  
     top2.configure(background="#1b1b1c")
 
     canvas = tk.Canvas(top2, borderwidth=0, highlightthickness=0,background="#1b1b1c")
@@ -71,10 +75,36 @@ def showData(link,mode,className,session):
                     elif "Time limit" in value:value = "No - Time limit"
                     elif "Memory" in value: value = "No - Memory limit"
                     elif "Idle" in value: value = "No - Idleness limit"
-            value = '\n' + value + '\n'
-            label = tk.Label(table_frame, text=value, borderwidth=1, relief='solid', highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"))
-            if value != '\n\n' and value[1] == '+':
-                label.configure(foreground='#1cfc03')
+            
+            if ':' in value and j > 3 and mode != "my":
+                tmp = value[value.index('+') + 1:value.index('\n')]
+                ans = value.index(':')
+                num = str(int(str(value[ans-2] + value[ans-1])) * 60 + int(str(value[ans + 1] + value[ans + 2])))
+                value = '\n' + (str(int(tmp)+1) + ' / ' + num if tmp else "1 / " + num) + '\n'
+
+            else:
+                value = '\n' + value + '\n'
+            label = tk.Label(table_frame, text=value, borderwidth=1, relief='solid', highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"),width = 10 if j > 3 and mode != "my" else None)
+            if value != '\n\n' and ('/' in value or '+' in value) and j > 3 and mode != "my":
+                if '/' in value:
+                    ans = value.index('/') + 1
+                    num = int(value[ans:])
+
+                    ok = False
+                    for o in range(len(rows)):
+                        if ':' not in rows[o][j]:continue
+                        tmp = rows[o][j]
+                        ans2 = tmp.index(':')
+                        num2 = int(str(tmp[ans2-2] + tmp[ans2-1])) * 60 + int(str(tmp[ans2 + 1] + tmp[ans2 + 2]))
+
+                        if num > num2: break
+                    else: ok = True
+                    if not ok:
+                        label.configure(background='#1cfc03',fg="black")
+                    else:
+                        label.configure(background='green')
+                else:
+                    label.configure(background='#1cfc03')
             if mode == "my" and j==5:
                 if value == "\nYes\n":
                     label.configure(foreground=("#1cfc03"))
@@ -82,7 +112,8 @@ def showData(link,mode,className,session):
                     label.configure(foreground=("red"))
                 else:
                     label.configure(foreground=("#dfdfe6"))
-
+            if '-' in value and j > 3 and mode != "my":
+                label.configure(bg="red")
             label.grid(row=i+1, column=j - (3 if mode == "my" else 0), sticky='nsew')
             table_frame.grid_rowconfigure(i+1, weight=1)
 
