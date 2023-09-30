@@ -6,11 +6,25 @@ global username
 global password
 global ok
 
+
 def login(contestLink,username,password):
     username = userEntry.get()
     password = passEntry.get()
-    contestLink = CLEntry.get()
+    global session
+    session = requests.Session()
+    submission_page = session.get(f"https://codeforces.com/enter").content
+    soup = BeautifulSoup(submission_page, 'html.parser')
+    form_data = {}
+    for field in ['csrf_token' ]:
+        field_value = soup.find('input', {'name': field}).get('value', '')
+
+        form_data[field] = field_value
+        
+    headers = {
+        'X-Csrf-Token': form_data['csrf_token']
+    }
     login_data = {
+        'csrf_token': form_data['csrf_token'],
         'action': 'enter',
         'handleOrEmail': username,
         'password': password,
@@ -18,11 +32,10 @@ def login(contestLink,username,password):
         '_tta': '135'
     }
 
-    global session
-    session = requests.Session()
-    response = session.post('https://codeforces.com/enter', data=login_data).content
-    
 
+    response = session.post('https://codeforces.com/enter', data=login_data,headers=headers).content
+    
+    open('errr.txt','wb').write(response)
 
     if contestLink[-1] == '/':
         contestLink = ''.join(list(contestLink)[:-1])
@@ -38,9 +51,8 @@ def login(contestLink,username,password):
     thread = threading.Thread(target=lambda: startListener(contestLink,session))
     thread.daemon = True
     thread.start()
-    
+    print(contestLink)
     frameCred.destroy()
-    frameCredCL.destroy()
     frameCredPass.destroy()
     btn.destroy()
     community_photo.forget()
@@ -50,11 +62,13 @@ def login(contestLink,username,password):
     statusBtn = Button(btnCFrame,text="Show My Submissions",width=20,padx=0, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0,command=lambda: showData(contestLink,'my','status-frame-datatable',session))   
     standingBtn = Button(btnCFrame,text="Show Standing",width=10,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0,command=lambda: showData(contestLink,'standings','standings',session))
     reqClar = Button(btnCFrame,text="Submit a Clarification",width=20,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0, command=lambda :showClar(options, session, contestLink)) 
-    shClar = Button(btnCFrame,text="Show Clarifications",width=20,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0, command=lambda :ShowAllClar(session,contestLink))   
+    shClar = Button(btnCFrame,text="Show Clarifications",width=20,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0, command=lambda :ShowAllClar(session,contestLink)) 
+    downPdf = Button(btnCFrame,text="Download Statements",width=20,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",bd=0, command=getStatments)  
     statusBtn.pack(side=LEFT,anchor=NW)
     standingBtn.pack(side=LEFT,anchor=NW)
     reqClar.pack(side=LEFT, anchor=NW)
     shClar.pack(side=LEFT, anchor=NW)
+    downPdf.pack(side=LEFT, anchor=NW)
     selected_option = StringVar()
 
     options = getProblemNames(contestLink,session)
@@ -94,6 +108,11 @@ def login(contestLink,username,password):
     finalSubBtn.pack(side=LEFT,anchor=NW)    
 
     community_photo.pack(side=RIGHT, anchor="se",padx=10,pady=0,expand=False, fill="y")
+
+contestLink = getContestLink()
+if not contestLink:
+    exit()
+open('temp.txt', 'w').write("Nothing Here..")
 root = Tk()
 root.geometry("800x430+300+300")
 root.resizable(False,False)
@@ -106,7 +125,7 @@ welcome.pack(anchor=NW)
 
 style = ttk.Style()
 style.configure('TFrame',background="#1b1b1c")
-frameCred = ttk.Frame(root,padding=(0,80,0,0))
+frameCred = ttk.Frame(root,padding=(0,120,0,0))
 frameCred.pack()
 userLab = Label(frameCred, text="Username: ",bg="#1b1b1c", fg="#dfdfe6",padx=20,font=("Arial",10,"bold"))
 userEntry = Entry(frameCred,width=40,font=("Arial",10), relief="flat")
@@ -128,16 +147,8 @@ try:
 except:
     ok = False
 
-frameCredCL = ttk.Frame(root,padding=(0,20,0,0))
-frameCredCL.pack()
-CLLab = Label(frameCredCL, text="Contest Link: ",bg="#1b1b1c", fg="#dfdfe6",padx=12,font=("Arial",10,"bold"))
-CLEntry = Entry(frameCredCL,width=40,font=("Arial",10),relief="flat")
-CLLab.pack(side=LEFT,anchor=N,fill=X)
-CLEntry.pack(side=RIGHT,anchor=N,fill=X)
 
-contestLink = CLEntry.get()
-
-btn = Button(root,text="Login",width=10,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",command=lambda: login(CLEntry.get(),userEntry.get(),passEntry.get()))
+btn = Button(root,text="Login",width=10,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove",command=lambda: login(contestLink,userEntry.get(),passEntry.get()))
 btn.pack(pady=40,padx=100)
 img = PhotoImage(data=images.image_acpc_base64)
 community_photo = Label(root, image=img,background="#1b1b1c",width=150,height=150)

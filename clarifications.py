@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-
+from bs4 import BeautifulSoup
 def submitClar(session,question,contest_link,problem,on_close):
 
     if len(question) == 0:
@@ -13,12 +13,20 @@ def submitClar(session,question,contest_link,problem,on_close):
         return
            
     form_data = {}
+    submission_page = session.get(contest_link).content
+    soup = BeautifulSoup(submission_page, 'html.parser')
+    form_data = {}
+    for field in ['csrf_token' ]:
+        field_value = soup.find('input', {'name': field}).get('value', '')
 
+        form_data[field] = field_value
     form_data["question"] = question
     form_data["submittedProblemIndex"] = problem
     form_data["contestId"] = contest_link[contest_link.rindex('/') + 1:]
-    
-    respone = session.post(f'{contest_link[:contest_link.index("/contest/")]}/data/newProblemQuestion', data=form_data)
+    headers = {
+        'X-Csrf-Token': form_data["csrf_token"]
+    }
+    respone = session.post(f'{contest_link[:contest_link.index("/contest/")]}/data/newProblemQuestion', data=form_data,headers=headers)
 
     if(respone.status_code == 200):        
         messagebox.showinfo(title="Success!", message="Submited Successfuly")
@@ -81,13 +89,11 @@ def showClar(options, session, contest_link):
     text = Text(frameEnt, width=80, height=10, font=("Arial",11))
     text.pack(side=LEFT, anchor=NW)
 
-    problem = selected_option2.get()[:selected_option2.get().index(':')]
-
     # Bind the function to the KeyPress event of the Text widget
     text.bind('<KeyPress>', insert_line_break)
 
     framebtn = ttk.Frame(clarWindow, padding=(0,40,0,0))
-    btn = Button(framebtn,text="Submit",width=10,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove", command= lambda: submitClar(session, text.get("1.0", END).strip(), contest_link, problem, on_close))
+    btn = Button(framebtn,text="Submit",width=10,padx=15, background="red",fg="#dfdfe6",relief="flat",activebackground="#a10e15",activeforeground="#dfdfe6",overrelief="groove", command= lambda: submitClar(session, text.get("1.0", END).strip(), contest_link, selected_option2.get()[:selected_option2.get().index(':')], on_close))
 
     framebtn.pack()
     btn.pack()

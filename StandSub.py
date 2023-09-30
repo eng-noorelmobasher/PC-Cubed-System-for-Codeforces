@@ -10,7 +10,7 @@ def showData(link,mode,className,session):
     def on_mousewheel(event):
         canvas.yview_scroll(-1 * int(event.delta / 120), 'units')
 
-    data = session.get(f"{link}/{mode}")
+    data = session.get(f"{link}/{mode}"+("?showUnofficial=0" if mode != "my" else ""))
 
     soup = BeautifulSoup(data.text, 'html.parser')
 
@@ -39,7 +39,7 @@ def showData(link,mode,className,session):
         top2.state('zoomed')  
     top2.configure(background="#1b1b1c")
 
-    canvas = tk.Canvas(top2, borderwidth=0, highlightthickness=0,background="#1b1b1c")
+    canvas = tk.Canvas(top2, borderwidth=0, highlightthickness=1,background="#1b1b1c", highlightbackground="#1b1b1c")
     canvas.grid(row=0, column=0, sticky='nsew')
     
     xscrollbar = tk.Scrollbar(top2, orient='horizontal', command=canvas.xview)
@@ -57,7 +57,7 @@ def showData(link,mode,className,session):
 
     for i, header in enumerate(headers):
         if i < 3 and mode == "my":continue
-        label = tk.Label(table_frame, text=header, borderwidth=1, relief='solid',highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"))
+        label = tk.Label(table_frame, text=header, borderwidth=1, relief='solid', highlightbackground="#1b1b1c",background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"))
         label.grid(row=0, column=i - (3 if mode == "my" else 0), sticky='nsew')
         table_frame.grid_columnconfigure(i - (3 if mode == "my"else 0), weight=1)
 
@@ -75,7 +75,7 @@ def showData(link,mode,className,session):
                     elif "Time limit" in value:value = "No - Time limit"
                     elif "Memory" in value: value = "No - Memory limit"
                     elif "Idle" in value: value = "No - Idleness limit"
-            
+                    else: value = "No - " + value
             if ':' in value and j > 3 and mode != "my":
                 tmp = value[value.index('+') + 1:value.index('\n')]
                 ans = value.index(':')
@@ -84,7 +84,7 @@ def showData(link,mode,className,session):
 
             else:
                 value = '\n' + value + '\n'
-            label = tk.Label(table_frame, text=value, borderwidth=1, relief='solid', highlightbackground='#dfdfe6',background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"),width = 10 if j > 3 and mode != "my" else None)
+            label = tk.Label(table_frame, text=value, borderwidth=0, relief='solid', highlightbackground="#1b1b1c",background="#1b1b1c",foreground="#dfdfe6",highlightcolor="#dfdfe6",highlightthickness=1,font=("Arial",10,"bold"),width = 10 if j > 3 and mode != "my" else None)
             if value != '\n\n' and ('/' in value or '+' in value) and j > 3 and mode != "my":
                 if '/' in value:
                     ans = value.index('/') + 1
@@ -100,11 +100,11 @@ def showData(link,mode,className,session):
                         if num > num2: break
                     else: ok = True
                     if not ok:
-                        label.configure(background='#1cfc03',fg="black")
+                        label.configure(background='#99ff99',fg="black")
                     else:
-                        label.configure(background='green')
+                        label.configure(background='#008800')
                 else:
-                    label.configure(background='#1cfc03')
+                    label.configure(background='#99ff99')
             if mode == "my" and j==5:
                 if value == "\nYes\n":
                     label.configure(foreground=("#1cfc03"))
@@ -113,7 +113,10 @@ def showData(link,mode,className,session):
                 else:
                     label.configure(foreground=("#dfdfe6"))
             if '-' in value and j > 3 and mode != "my":
-                label.configure(bg="red")
+                label.configure(bg="#ff9999", fg="black")
+            if value == "\n\n" and j > 3 and mode != "my":value = "\n0 / 0\n"
+            if value == "\n0 / 0\n":
+                label.configure(foreground="#dfdfe6",text=value)
             label.grid(row=i+1, column=j - (3 if mode == "my" else 0), sticky='nsew')
             table_frame.grid_rowconfigure(i+1, weight=1)
 

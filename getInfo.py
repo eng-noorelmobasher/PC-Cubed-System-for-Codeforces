@@ -5,7 +5,7 @@ def getProblemNames(link,session):
     url = link
 
     response = session.get(url)
-
+    
     soup = BeautifulSoup(response.text, 'html.parser')
     excluded = ["act bottom dark", "bottom dark right"]
     problem_names = []

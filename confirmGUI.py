@@ -29,7 +29,8 @@ def showConfirm(submission,problem,verd):
         elif "Runtime" in verd: verd = "No - Runtime error"
         elif "Time limit" in verd:verd = "No - Time limit"
         elif "Memory" in verd: verd = "No - Memory limit"
-        elif "Idle" in value: value = "No - Idleness limit"
+        elif "Idle" in verd: verd = "No - Idleness limit"
+        else: verd = "No - "+verd
     Verdict= Label(frameProp, text=verd,bg="#1b1b1c", fg=("#1cfc03" if verd=="Yes" else "red"),padx=20,font=("Arial",10,"bold"))
 
     Verdicttxt= Label(frameProp, text=f"Verdict: ",bg="#1b1b1c", fg="#dfdfe6",padx=20,font=("Arial",10,"bold"))

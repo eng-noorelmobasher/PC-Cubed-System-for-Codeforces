@@ -38,6 +38,7 @@ def submutSolution(link, session, problem, filepath):
 
     # Submit the solution
     response = session.post(f'{link}/submit', data=form_data)
+    
     if "You have submitted exactly the same code before" in response.text:
         messagebox.showerror("Error","You submitted this code before.")
         return
